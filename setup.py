@@ -2,18 +2,11 @@ from setuptools import setup
 
 
 setup(
-    name='stock_listing',
+    name='rdv_online',
     install_requires=[
-        'click',
-
         'requests',
-
         # Environment variable parsing
         'environs',
-
-        # Schedule jobs (cron-like)
-        'schedule',
-
         'selenium',
     ],
     extras_require={

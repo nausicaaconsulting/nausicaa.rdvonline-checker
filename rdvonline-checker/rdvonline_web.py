@@ -31,10 +31,7 @@ def create_driver():
     return driver
 
 
-def check_available_date():
-    postal_code = '33380'
-    distance = 50
-    nb_persons = 1
+def check_available_date(postal_code: str, distance: int, nb_persons: int):
     position = get_postal_code_info(postal_code)
     mairies = get_mairies(position, distance)
 
