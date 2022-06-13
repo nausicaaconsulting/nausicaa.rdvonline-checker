@@ -7,11 +7,6 @@ setup(
         'click',
 
         'requests',
-        'marshmallow',
-
-        # Webscraping
-        'beautifulsoup4',
-        'lxml',
 
         # Environment variable parsing
         'environs',
@@ -20,9 +15,6 @@ setup(
         'schedule',
 
         'selenium',
-
-        # Run everything together
-        'supervisor',
     ],
     extras_require={
         'dev': [

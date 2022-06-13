@@ -21,11 +21,10 @@ def cli():
 
 @click.command()
 def rdvonline():
-    # Schedule the command to rerun every 60 seconds
-    schedule.every(4).seconds.do(rdvonline_web.check_available_date)
+    schedule.every(120).seconds.do(rdvonline_web.check_available_date)
     while True:
         schedule.run_pending()
-        time.sleep(2)
+        time.sleep(10)
 
 
 cli.add_command(rdvonline)
