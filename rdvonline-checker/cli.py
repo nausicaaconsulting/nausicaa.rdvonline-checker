@@ -4,7 +4,7 @@ import sys
 import click
 import schedule
 
-import web_scraping
+import rdvonline_web
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ def cli():
 @click.command()
 def rdvonline():
     # Schedule the command to rerun every 60 seconds
-    schedule.every(4).seconds.do(web_scraping.test)
+    schedule.every(4).seconds.do(rdvonline_web.check_available_date)
     while True:
         schedule.run_pending()
         time.sleep(2)
@@ -31,4 +31,4 @@ def rdvonline():
 cli.add_command(rdvonline)
 
 if __name__ == '__main__':
-    rdvonline()
+    rdvonline_web.check_available_date()
