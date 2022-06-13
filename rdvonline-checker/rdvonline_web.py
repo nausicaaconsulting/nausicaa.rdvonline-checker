@@ -41,12 +41,13 @@ def check_available_date():
     with create_driver() as driver:
         if mairies:
             for mairie in mairies:
+                text = 'Aucune reservation possible'
                 try:
-                    text = query_mairie(mairie, driver, nb_persons)
-                    text = text.replace('\n', ' - ')
+                    if next((reason for reason in mairie['reasons'] if (reason['name'] == 'Dépôt passeport')), None):
+                        text = query_mairie(mairie, driver, nb_persons)
+                        text = text.replace('\n', ' - ')
                 except:
-                    text = 'Aucune reservation possible'
-
+                    pass
                 print(f"{mairie['name']} => {text}")
 
 
