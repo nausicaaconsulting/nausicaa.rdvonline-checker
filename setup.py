@@ -8,6 +8,7 @@ setup(
         # Environment variable parsing
         'environs',
         'selenium',
+        'kivy',
     ],
     extras_require={
         'dev': [

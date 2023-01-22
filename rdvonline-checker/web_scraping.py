@@ -52,6 +52,7 @@ def query_mairie(mairie: dict, driver, nb_persons: int):
     ## FIRST SCREEN ##
     service = "Carte%20Nationale%20d%27Identité%20%28CNI%29%20et%20Passeport"
     url = f"https://rendezvousonline.fr/alias/{mairie['alias']}/prendre-rendez-vous?service={service}"
+    #print(url)
     try:
         driver.get(url)
     except WebDriverException:
