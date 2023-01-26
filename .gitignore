@@ -129,3 +129,6 @@ dmypy.json
 .pyre/
 /rdvonline-checker/.config/
 /scripts/.config/
+
+# idea
+.idea/*
