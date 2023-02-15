@@ -1,6 +1,12 @@
 import logging
 import time
 import requests
+
+from requests.sessions import Session
+
+from enum import Enum
+from datetime import datetime
+
 from selenium import webdriver
 from selenium.webdriver import Keys
 from selenium.webdriver.chrome.options import Options
@@ -16,6 +22,10 @@ import settings
 
 logger = logging.getLogger(__name__)
 
+class rdv_reasons(Enum):
+    DEPOT_PASSEPORT = 'Dépôt passeport'
+    DEPORT_CNI = 'Dépôt carte nationale d\'identité'
+
 
 def create_driver():
     chrome_options = Options()
@@ -29,23 +39,6 @@ def create_driver():
     driver = webdriver.Chrome(options=chrome_options)
     driver.implicitly_wait(3)  # Always wait at least 3 seconds when trying to find an element
     return driver
-
-
-def check_available_date(postal_code: str, distance: int, nb_persons: int):
-    position = get_postal_code_info(postal_code)
-    mairies = get_mairies(position, distance)
-
-    with create_driver() as driver:
-        if mairies:
-            for mairie in mairies:
-                text = 'Aucune reservation possible'
-                try:
-                    if next((reason for reason in mairie['reasons'] if (reason['name'] == 'Dépôt passeport')), None):
-                        text = query_mairie(mairie, driver, nb_persons)
-                        text = text.replace('\n', ' - ')
-                except:
-                    pass
-                print(f"{mairie['name']} => {text}")
 
 
 def query_mairie(mairie: dict, driver, nb_persons: int):
@@ -85,6 +78,51 @@ def query_mairie(mairie: dict, driver, nb_persons: int):
     return card_text
 
 
+def check_available_date(postal_code: str, distance: int, nb_persons: int, reasons: str):
+
+    position = get_postal_code_info(postal_code)
+    mairies = get_mairies(position, distance)
+
+    session = requests.Session()
+    auth_raw = session.get('https://pro.rendezvousonline.fr/api-web/auth/session')
+    auth_raw.raise_for_status()
+    auth = auth_raw.json()
+
+    if mairies:
+        for mairie in mairies:
+            text = 'Aucune reservation possible'
+            try:
+                if next((reason for reason in mairie['reasons'] if (reason['name'] == 'Dépôt passeport')), None):
+                    text = request_mairie(session, auth['session_id'], mairie, nb_persons, reasons)
+            except:
+                pass
+            print(f"{mairie['name']} => {text}")
+
+
+def request_mairie(session: Session, session_id: str,  mairie: dict, nb_persons: int, reasons: str):
+    formatted_date = datetime.now().strftime("%Y-%m-%d")
+    service = "Carte%20Nationale%20d%27Identité%20%28CNI%29%20et%20Passeport"
+    url = f"https://rendezvousonline.fr/alias/{mairie['alias']}/prendre-rendez-vous?service={service}"
+    raw_services = session.get(f"https://pro.rendezvousonline.fr/api-web/structures/{mairie['id']}/services")
+    raw_services.raise_for_status()
+    services = raw_services.json()
+    if not (len(services) > 0 and services[0]["reasons"]):
+        return None
+    reason = next((x for x in services[0]['reasons'] if reasons in x['name']), None)
+    print('coucou')
+
+    unlock_payload = {"session_id": session_id}
+    unlock_raw = session.put('https://pro.rendezvousonline.fr/api-web/availabilities/unlock', json=unlock_payload)
+    unlock_raw.raise_for_status()
+
+    query_url = f"https://pro.rendezvousonline.fr/api-web/structures/{mairie['id']}/availabilities/week?session_id={session_id}&reasons={{\"{reason['id']}\":{nb_persons}}}&date={formatted_date}&direction=1"
+    raw_calendar = session.get(query_url)
+    raw_calendar.raise_for_status()
+    calendar = raw_calendar.json()
+    print('coucou')
+    return None
+
+
 def get_mairies(position: dict, distance: int):
     place = position['place_name']
     longitude = position['center'][0]
@@ -106,3 +144,11 @@ def get_postal_code_info(postal_code: str):
         return positions.get('features')[0]
     return None
 
+
+if __name__ == '__main__':
+    check_available_date(
+        33230, # 62810
+        50,
+        1,
+        rdv_reasons.DEPOT_PASSEPORT.value
+    )
